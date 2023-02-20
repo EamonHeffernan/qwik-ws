@@ -42,7 +42,6 @@ export const useWs = (url: string | URL, options?: UseWsOptions) => {
 	const setEvents = $(() => {
 		if (!ws.value) return;
 		if (!options) return;
-		if (!exportFunctions.value) return;
 
 		ws.value.onclose = (ev) => {
 			if (!ws.value) return;
