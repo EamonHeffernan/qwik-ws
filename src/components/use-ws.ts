@@ -38,20 +38,6 @@ export type UseWsOptions = {
 export const useWs = (url: string | URL, options?: UseWsOptions) => {
 	const ws = useSignal<NoSerialize<WebSocket>>();
 
-	const reconnect = $(async () => {
-		if (ws.value) ws.value.close();
-
-		await createWebSocket();
-	});
-
-	const exportFunctions: UseWs = {
-		close: $(() => ws.value?.close()),
-		send: $((data: string | ArrayBufferLike | Blob | ArrayBufferView) =>
-			ws.value?.send(data)
-		),
-		reconnect: reconnect,
-	};
-
 	const setEvents = $(() => {
 		if (!ws.value) return;
 		if (!options) return;
@@ -79,6 +65,20 @@ export const useWs = (url: string | URL, options?: UseWsOptions) => {
 
 		await setEvents();
 	});
+
+	const reconnect = $(async () => {
+		if (ws.value) ws.value.close();
+
+		await createWebSocket();
+	});
+
+	const exportFunctions: UseWs = {
+		close: $(() => ws.value?.close()),
+		send: $((data: string | ArrayBufferLike | Blob | ArrayBufferView) =>
+			ws.value?.send(data)
+		),
+		reconnect: reconnect,
+	};
 
 	useBrowserVisibleTask$(async (ctx) => {
 		ctx.track(() => url);
