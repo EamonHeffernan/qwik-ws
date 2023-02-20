@@ -48,14 +48,24 @@ export const useWs = (url: string | URL, options?: useWsOptions) => {
 		};
 	});
 
+	const createWebSocket = $(async () => {
+		ws.value = noSerialize(new WebSocket(url, options?.protocols));
+
+		await setEvents();
+	});
+
+	const reconnect = $(async () => {
+		if (ws.value) ws.value.close();
+
+		await createWebSocket();
+	});
+
 	useBrowserVisibleTask$(async (ctx) => {
 		ctx.track(() => url);
 		ctx.track(() => options?.protocols);
 		ctx.track(() => Promise.resolve(options));
 
-		ws.value = noSerialize(new WebSocket(url, options?.protocols));
-
-		await setEvents();
+		await createWebSocket();
 
 		return () => ws.value?.close();
 	});
@@ -75,5 +85,6 @@ export const useWs = (url: string | URL, options?: useWsOptions) => {
 		send: $((data: string | ArrayBufferLike | Blob | ArrayBufferView) =>
 			ws.value?.send(data)
 		),
+		reconnect: reconnect,
 	};
 };

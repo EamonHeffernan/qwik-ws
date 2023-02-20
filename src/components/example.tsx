@@ -55,6 +55,15 @@ export default component$(() => {
 			>
 				Close Websocket
 			</button>
+			{/* This will manually reconnect to the url
+			and protocols provided in the useWs hook. */}
+			<button
+				onClick$={() => {
+					websocket.reconnect();
+				}}
+			>
+				Reconnect
+			</button>
 		</div>
 	);
 });
