@@ -1,6 +1,6 @@
 {
 	"name": "qwik-ws",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"description": "Simple Websocket client hook for Qwik",
 	"author": "Eamon Heffernan",
 	"main": "./lib/index.qwik.mjs",
@@ -11,6 +11,10 @@
 		"websocket",
 		"ws"
 	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/EamonHeffernan/qwik-ws.git"
+	},
 	"exports": {
 		".": {
 			"import": "./lib/index.qwik.mjs",
