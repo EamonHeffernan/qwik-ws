@@ -8,14 +8,26 @@ import {
 	useTask$,
 } from "@builder.io/qwik";
 
-export type CloseEventFunction = QRL<(ev: CloseEvent, ws: WebSocket) => void>;
-export type ErrorEventFunction = QRL<(ev: Event, ws: WebSocket) => void>;
-export type MessageEventFunction = QRL<
-	(ev: MessageEvent<any>, ws: WebSocket) => void
->;
-export type OpenEventFunction = QRL<(ev: Event, ws: WebSocket) => void>;
+export type UseWs = {
+	close: QRL<() => void>;
+	send: QRL<(data: string | ArrayBufferLike | Blob | ArrayBufferView) => void>;
+	reconnect: QRL<() => void>;
+};
 
-export type useWsOptions = {
+export type CloseEventFunction = QRL<
+	(ev: CloseEvent, ws: WebSocket, funcs: UseWs) => void
+>;
+export type ErrorEventFunction = QRL<
+	(ev: Event, ws: WebSocket, funcs: UseWs) => void
+>;
+export type MessageEventFunction = QRL<
+	(ev: MessageEvent<any>, ws: WebSocket, funcs: UseWs) => void
+>;
+export type OpenEventFunction = QRL<
+	(ev: Event, ws: WebSocket, funcs: UseWs) => void
+>;
+
+export type UseWsOptions = {
 	protocols?: string | string[];
 	onClose$?: CloseEventFunction;
 	onError$?: ErrorEventFunction;
@@ -23,8 +35,22 @@ export type useWsOptions = {
 	onOpen$?: OpenEventFunction;
 };
 
-export const useWs = (url: string | URL, options?: useWsOptions) => {
+export const useWs = (url: string | URL, options?: UseWsOptions) => {
 	const ws = useSignal<NoSerialize<WebSocket>>();
+
+	const reconnect = $(async () => {
+		if (ws.value) ws.value.close();
+
+		await createWebSocket();
+	});
+
+	const exportFunctions: UseWs = {
+		close: $(() => ws.value?.close()),
+		send: $((data: string | ArrayBufferLike | Blob | ArrayBufferView) =>
+			ws.value?.send(data)
+		),
+		reconnect: reconnect,
+	};
 
 	const setEvents = $(() => {
 		if (!ws.value) return;
@@ -32,19 +58,19 @@ export const useWs = (url: string | URL, options?: useWsOptions) => {
 
 		ws.value.onclose = (ev) => {
 			if (!ws.value) return;
-			options.onClose$?.(ev, ws.value);
+			options.onClose$?.(ev, ws.value, exportFunctions);
 		};
 		ws.value.onerror = (ev) => {
 			if (!ws.value) return;
-			options.onError$?.(ev, ws.value);
+			options.onError$?.(ev, ws.value, exportFunctions);
 		};
 		ws.value.onmessage = (ev) => {
 			if (!ws.value) return;
-			options.onMessage$?.(ev, ws.value);
+			options.onMessage$?.(ev, ws.value, exportFunctions);
 		};
 		ws.value.onopen = (ev) => {
 			if (!ws.value) return;
-			options.onOpen$?.(ev, ws.value);
+			options.onOpen$?.(ev, ws.value, exportFunctions);
 		};
 	});
 
@@ -52,12 +78,6 @@ export const useWs = (url: string | URL, options?: useWsOptions) => {
 		ws.value = noSerialize(new WebSocket(url, options?.protocols));
 
 		await setEvents();
-	});
-
-	const reconnect = $(async () => {
-		if (ws.value) ws.value.close();
-
-		await createWebSocket();
 	});
 
 	useBrowserVisibleTask$(async (ctx) => {
@@ -80,11 +100,5 @@ export const useWs = (url: string | URL, options?: useWsOptions) => {
 		await setEvents();
 	});
 
-	return {
-		close: $(() => ws.value?.close()),
-		send: $((data: string | ArrayBufferLike | Blob | ArrayBufferView) =>
-			ws.value?.send(data)
-		),
-		reconnect: reconnect,
-	};
+	return exportFunctions;
 };

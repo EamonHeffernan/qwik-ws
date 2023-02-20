@@ -55,9 +55,12 @@ export default component$(() => {
 		ws.close();
 	});
 
-	const onClose$: CloseEventFunction = $((ev, ws) => {
+	const onClose$: CloseEventFunction = $((ev, ws, funcs) => {
 		console.log("Websocket Closed", ev.timeStamp);
 		console.log(ws.readyState);
+
+		// Events can access the additional websocket functions provided in the 3rd argument.
+		funcs.reconnect();
 	});
 
 	const websocket = useWs("ws://localhost:8080", {

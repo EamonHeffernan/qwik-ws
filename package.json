@@ -1,6 +1,6 @@
 {
 	"name": "qwik-ws",
-	"version": "0.0.5",
+	"version": "0.0.6",
 	"description": "Simple Websocket client hook for Qwik",
 	"author": "Eamon Heffernan",
 	"main": "./lib/index.qwik.mjs",
