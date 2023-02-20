@@ -38,25 +38,28 @@ export type UseWsOptions = {
 export const useWs = (url: string | URL, options?: UseWsOptions) => {
 	const ws = useSignal<NoSerialize<WebSocket>>();
 
+	const exportFunctions = useSignal<NoSerialize<UseWs>>();
+
 	const setEvents = $(() => {
 		if (!ws.value) return;
 		if (!options) return;
+		if (!exportFunctions.value) return;
 
 		ws.value.onclose = (ev) => {
 			if (!ws.value) return;
-			options.onClose$?.(ev, ws.value, exportFunctions);
+			options.onClose$?.(ev, ws.value, exportFunctions.value!);
 		};
 		ws.value.onerror = (ev) => {
 			if (!ws.value) return;
-			options.onError$?.(ev, ws.value, exportFunctions);
+			options.onError$?.(ev, ws.value, exportFunctions.value!);
 		};
 		ws.value.onmessage = (ev) => {
 			if (!ws.value) return;
-			options.onMessage$?.(ev, ws.value, exportFunctions);
+			options.onMessage$?.(ev, ws.value, exportFunctions.value!);
 		};
 		ws.value.onopen = (ev) => {
 			if (!ws.value) return;
-			options.onOpen$?.(ev, ws.value, exportFunctions);
+			options.onOpen$?.(ev, ws.value, exportFunctions.value!);
 		};
 	});
 
@@ -72,18 +75,18 @@ export const useWs = (url: string | URL, options?: UseWsOptions) => {
 		await createWebSocket();
 	});
 
-	const exportFunctions: UseWs = {
-		close: $(() => ws.value?.close()),
-		send: $((data: string | ArrayBufferLike | Blob | ArrayBufferView) =>
-			ws.value?.send(data)
-		),
-		reconnect: reconnect,
-	};
-
 	useBrowserVisibleTask$(async (ctx) => {
 		ctx.track(() => url);
 		ctx.track(() => options?.protocols);
 		ctx.track(() => Promise.resolve(options));
+
+		exportFunctions.value = noSerialize({
+			close: $(() => ws.value?.close()),
+			send: $((data: string | ArrayBufferLike | Blob | ArrayBufferView) =>
+				ws.value?.send(data)
+			),
+			reconnect: reconnect,
+		});
 
 		await createWebSocket();
 
@@ -100,5 +103,5 @@ export const useWs = (url: string | URL, options?: UseWsOptions) => {
 		await setEvents();
 	});
 
-	return exportFunctions;
+	return exportFunctions.value;
 };

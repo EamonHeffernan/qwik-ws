@@ -46,14 +46,14 @@ export default component$(() => {
 		<div>
 			<button
 				onClick$={() => {
-					websocket.send("Hello World!");
+					websocket?.send("Hello World!");
 				}}
 			>
 				Send Message
 			</button>
 			<button
 				onClick$={() => {
-					websocket.close();
+					websocket?.close();
 				}}
 			>
 				Close Websocket
@@ -62,7 +62,7 @@ export default component$(() => {
 			and protocols provided in the useWs hook. */}
 			<button
 				onClick$={() => {
-					websocket.reconnect();
+					websocket?.reconnect();
 				}}
 			>
 				Reconnect
