@@ -46,14 +46,14 @@ export default component$(() => {
 		<div>
 			<button
 				onClick$={() => {
-					websocket?.send("Hello World!");
+					websocket?.ws?.send("Hello World!");
 				}}
 			>
 				Send Message
 			</button>
 			<button
 				onClick$={() => {
-					websocket?.close();
+					websocket?.ws?.close();
 				}}
 			>
 				Close Websocket

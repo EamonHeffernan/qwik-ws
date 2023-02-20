@@ -9,22 +9,21 @@ import {
 } from "@builder.io/qwik";
 
 export type UseWs = {
-	close: QRL<() => void>;
-	send: QRL<(data: string | ArrayBufferLike | Blob | ArrayBufferView) => void>;
-	reconnect: QRL<() => void>;
+	ws?: WebSocket;
+	reconnect: QRL<() => Promise<void>>;
 };
 
 export type CloseEventFunction = QRL<
-	(ev: CloseEvent, ws: WebSocket, funcs: UseWs) => void
+	(ev: CloseEvent, ws: WebSocket, funcs: Omit<UseWs, "ws">) => void
 >;
 export type ErrorEventFunction = QRL<
-	(ev: Event, ws: WebSocket, funcs: UseWs) => void
+	(ev: Event, ws: WebSocket, funcs: Omit<UseWs, "ws">) => void
 >;
 export type MessageEventFunction = QRL<
-	(ev: MessageEvent<any>, ws: WebSocket, funcs: UseWs) => void
+	(ev: MessageEvent<any>, ws: WebSocket, funcs: Omit<UseWs, "ws">) => void
 >;
 export type OpenEventFunction = QRL<
-	(ev: Event, ws: WebSocket, funcs: UseWs) => void
+	(ev: Event, ws: WebSocket, funcs: Omit<UseWs, "ws">) => void
 >;
 
 export type UseWsOptions = {
@@ -80,15 +79,12 @@ export const useWs = (url: string | URL, options?: UseWsOptions) => {
 		ctx.track(() => options?.protocols);
 		ctx.track(() => Promise.resolve(options));
 
-		exportFunctions.value = noSerialize({
-			close: $(() => ws.value?.close()),
-			send: $((data: string | ArrayBufferLike | Blob | ArrayBufferView) =>
-				ws.value?.send(data)
-			),
-			reconnect: reconnect,
-		});
-
 		await createWebSocket();
+
+		exportFunctions.value = noSerialize({
+			ws: ws.value,
+			reconnect,
+		});
 
 		return () => ws.value?.close();
 	});
